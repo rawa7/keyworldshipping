@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../utils/app_localizations.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ABOUT US'),
+        title: Text(localizations.aboutUs),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(

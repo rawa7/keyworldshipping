@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/transport_model.dart';
 import '../services/transport_service.dart';
+import '../utils/app_localizations.dart';
 import 'transport_detail_screen.dart';
 import 'transport_type_screen.dart';
 
@@ -119,16 +120,18 @@ class _TransportsScreenState extends State<TransportsScreen> {
   }
 
   Widget _buildTableHeader() {
+    final localizations = AppLocalizations.of(context);
+    
     return Container(
       color: Colors.blue,
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             flex: 2,
             child: Text(
               'Code',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -138,8 +141,8 @@ class _TransportsScreenState extends State<TransportsScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              'Status',
-              style: TextStyle(
+              localizations.status ?? 'Status',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -150,7 +153,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
             flex: 1,
             child: Text(
               'No',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -207,6 +210,8 @@ class _TransportsScreenState extends State<TransportsScreen> {
   }
 
   Widget _buildTransportTable(List<TransportModel> transports, String title) {
+    final localizations = AppLocalizations.of(context);
+    
     // Get the last 4 items (or fewer if less available)
     final displayTransports = transports.length > 4 
         ? transports.sublist(transports.length - 4) 
@@ -248,23 +253,42 @@ class _TransportsScreenState extends State<TransportsScreen> {
               _buildTableHeader(),
               ...displayTransports.map((transport) => _buildTableRow(transport)).toList(),
               Container(
-                width: double.infinity,
-                color: Colors.blue,
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TransportTypeScreen(
-                          transportType: transports.first.transportType,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransportTypeScreen(
+                            transportType: transports.first.transportType,
+                          ),
                         ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      minimumSize: const Size(100, 32),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.visibility, color: Colors.white),
-                  label: const Text(
-                    'See More',
-                    style: TextStyle(color: Colors.white),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.visibility, color: Colors.white, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          localizations.viewDetails,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -276,6 +300,8 @@ class _TransportsScreenState extends State<TransportsScreen> {
   }
 
   Widget _buildSearchBar() {
+    final localizations = AppLocalizations.of(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Row(
@@ -308,7 +334,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'ENTER YOUR TRUCK NUMBER...',
+                hintText: localizations.enterTruckNumber ?? 'ENTER TRUCK NUMBER...',
                 hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                 filled: true,
                 fillColor: Colors.grey[200],
@@ -349,6 +375,8 @@ class _TransportsScreenState extends State<TransportsScreen> {
   }
 
   Widget _buildContent() {
+    final localizations = AppLocalizations.of(context);
+    
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -363,7 +391,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
             const Icon(Icons.error, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
-              'Failed to load transports',
+              localizations.noData,
               style: TextStyle(
                 color: Colors.grey[700],
                 fontSize: 16,
@@ -387,7 +415,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
                 });
                 _fetchTransports();
               },
-              child: const Text('Retry'),
+              child: Text(localizations.retry),
             ),
           ],
         ),
@@ -395,10 +423,10 @@ class _TransportsScreenState extends State<TransportsScreen> {
     }
 
     if (_transports.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No transport data available',
-          style: TextStyle(
+          localizations.noData,
+          style: const TextStyle(
             fontSize: 16,
             color: Colors.grey,
           ),
@@ -416,7 +444,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
         tables.add(
           _buildTransportTable(
             transports,
-            'LIST OF SHIPMENTS ARRIVING BY ${type.toUpperCase()}',
+            '${localizations.transports} ${type.toUpperCase()}',
           ),
         );
       }
@@ -440,28 +468,32 @@ class _TransportsScreenState extends State<TransportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DELIVERY LISTS'),
+        title: Text(localizations.transports),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           },
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.home),
             onPressed: () {
-              Navigator.popUntil(context, (route) => route.isFirst);
+              Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
             },
           ),
         ],
       ),
       backgroundColor: const Color(0xFFF5F7FA),
-      body: _buildContent(),
+      body: SafeArea(
+        child: _buildContent(),
+      ),
     );
   }
 } 

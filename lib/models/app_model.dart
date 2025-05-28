@@ -3,12 +3,14 @@ class AppModel {
   final String name;
   final String icon;
   final String description;
+  final String country;
 
   AppModel({
     required this.id,
     required this.name,
     required this.icon,
     required this.description,
+    required this.country,
   });
 
   factory AppModel.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class AppModel {
       name: json['name'] as String,
       icon: json['icon'] as String,
       description: json['description'] as String,
+      country: json['country'] as String? ?? '',
     );
   }
   

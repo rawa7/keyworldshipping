@@ -448,7 +448,7 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           },
         ),
         actions: [

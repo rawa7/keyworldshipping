@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/app_model.dart';
 import '../models/tutorial_model.dart';
 import '../services/tutorial_service.dart';
+import '../utils/app_localizations.dart';
 import 'tutorial_detail_screen.dart';
 
 class TutorialsScreen extends StatefulWidget {
@@ -43,9 +44,11 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.app.name} Tutorials'),
+        title: Text('${widget.app.name} ${localizations.tutorials}'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -54,6 +57,8 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
   }
 
   Widget _buildBody() {
+    final localizations = AppLocalizations.of(context);
+    
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -68,7 +73,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
             const Icon(Icons.error, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
-              'Failed to load tutorials',
+              localizations.noData,
               style: TextStyle(
                 color: Colors.grey[700],
                 fontSize: 16,
@@ -83,7 +88,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                 });
                 _fetchTutorials();
               },
-              child: const Text('Retry'),
+              child: Text(localizations.retry),
             ),
           ],
         ),
@@ -93,7 +98,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
     if (_tutorials.isEmpty) {
       return Center(
         child: Text(
-          'No tutorials available for ${widget.app.name}',
+          '${localizations.noData} ${widget.app.name}',
           style: const TextStyle(fontSize: 16),
         ),
       );
@@ -110,6 +115,8 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
   }
 
   Widget _buildTutorialCard(TutorialModel tutorial) {
+    final localizations = AppLocalizations.of(context);
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -173,7 +180,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Watch Tutorial',
+                        localizations.watchVideo,
                         style: TextStyle(
                           color: Colors.blue[700],
                           fontWeight: FontWeight.w500,

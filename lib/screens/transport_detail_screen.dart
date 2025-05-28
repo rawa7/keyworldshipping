@@ -15,7 +15,7 @@ class TransportDetailScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
         ),
       ),
       backgroundColor: const Color(0xFFF5F7FA),

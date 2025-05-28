@@ -53,11 +53,17 @@ class _BannerWidgetState extends State<BannerWidget> {
     if (widget.banners.isEmpty) {
       return Container(
         width: double.infinity,
-        height: 220,
+        height: 180,
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: Colors.grey[200],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.blue, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: const Center(
           child: Text(
@@ -74,13 +80,19 @@ class _BannerWidgetState extends State<BannerWidget> {
 
     return Container(
       width: double.infinity,
-      height: 220,
+      height: 180,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
             PageView.builder(
@@ -101,18 +113,42 @@ class _BannerWidgetState extends State<BannerWidget> {
                   child: CachedNetworkImage(
                     imageUrl: banner.image.replaceAll(r'\\', '/'),
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.blue[300],
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[200],
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.blue[300],
+                        ),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.error),
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: Icon(Icons.error, size: 40, color: Colors.grey),
+                      ),
                     ),
                   ),
                 );
               },
+            ),
+            // Gradient overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 60,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.4),
+                    ],
+                  ),
+                ),
+              ),
             ),
             // Dots indicator
             Positioned(
@@ -125,13 +161,13 @@ class _BannerWidgetState extends State<BannerWidget> {
                   widget.banners.length,
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
                     height: 8,
-                    width: _currentPage == index ? 24 : 8,
+                    width: _currentPage == index ? 20 : 8,
                     decoration: BoxDecoration(
                       color: _currentPage == index
-                          ? Colors.blue
-                          : Colors.grey.withOpacity(0.5),
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

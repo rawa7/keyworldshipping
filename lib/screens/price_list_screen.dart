@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/price_model.dart';
 import '../services/price_service.dart';
+import '../utils/app_localizations.dart';
 
 class PriceListScreen extends StatefulWidget {
   const PriceListScreen({Key? key}) : super(key: key);
@@ -37,6 +38,8 @@ class _PriceListScreenState extends State<PriceListScreen> {
   }
 
   Widget _buildPriceItem(PriceModel price) {
+    final localizations = AppLocalizations.of(context);
+    
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
@@ -101,6 +104,8 @@ class _PriceListScreenState extends State<PriceListScreen> {
   }
 
   Widget _buildContent() {
+    final localizations = AppLocalizations.of(context);
+    
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -115,7 +120,7 @@ class _PriceListScreenState extends State<PriceListScreen> {
             const Icon(Icons.error, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
-              'Failed to load prices',
+              localizations.noData,
               style: TextStyle(
                 color: Colors.grey[700],
                 fontSize: 16,
@@ -139,7 +144,7 @@ class _PriceListScreenState extends State<PriceListScreen> {
                 });
                 _fetchPrices();
               },
-              child: const Text('Retry'),
+              child: Text(localizations.retry),
             ),
           ],
         ),
@@ -147,10 +152,10 @@ class _PriceListScreenState extends State<PriceListScreen> {
     }
 
     if (_prices.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No pricing information available',
-          style: TextStyle(
+          localizations.noData,
+          style: const TextStyle(
             fontSize: 16,
             color: Colors.grey,
           ),
@@ -163,9 +168,9 @@ class _PriceListScreenState extends State<PriceListScreen> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: const Text(
-            'PRICING LIST',
-            style: TextStyle(
+          child: Text(
+            localizations.priceList,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -186,20 +191,24 @@ class _PriceListScreenState extends State<PriceListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PRICE LIST'),
+        title: Text(localizations.priceList),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
           },
         ),
       ),
       backgroundColor: Colors.white,
-      body: _buildContent(),
+      body: SafeArea(
+        child: _buildContent(),
+      ),
     );
   }
 } 
