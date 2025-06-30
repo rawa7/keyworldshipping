@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/transport_model.dart';
+import '../models/search_response_model.dart';
 
 class TransportService {
   static const String apiUrl = 'https://keyworldcargo.com/api/get_transports.php';
   static const String singleTransportUrl = 'https://keyworldcargo.com/api/get_one_transport.php';
+  static const String searchUrl = 'https://keyworldcargo.com/api/search.php';
 
   Future<List<TransportModel>> fetchTransports() async {
     try {
@@ -47,6 +49,23 @@ class TransportService {
       }
     } catch (e) {
       throw Exception('Failed to load transport: $e');
+    }
+  }
+
+  // New search method using the search API
+  Future<SearchResponseModel> searchByCode(String code) async {
+    try {
+      final url = Uri.parse('$searchUrl?code=$code');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = json.decode(response.body);
+        return SearchResponseModel.fromJson(jsonData);
+      } else {
+        throw Exception('Failed to search: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to search: $e');
     }
   }
 } 

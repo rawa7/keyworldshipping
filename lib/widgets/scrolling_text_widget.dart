@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
+import 'package:marquee/marquee.dart';
 import '../models/info_model.dart';
+import '../utils/language_provider.dart';
+import '../utils/app_localizations.dart';
 
 class ScrollingTextWidget extends StatefulWidget {
   final List<InfoModel> infoItems;
@@ -14,105 +17,102 @@ class ScrollingTextWidget extends StatefulWidget {
   State<ScrollingTextWidget> createState() => _ScrollingTextWidgetState();
 }
 
-class _ScrollingTextWidgetState extends State<ScrollingTextWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _animation;
-  int _currentIndex = 0;
-  String _currentText = '';
-
+class _ScrollingTextWidgetState extends State<ScrollingTextWidget> with AutomaticKeepAliveClientMixin {
   @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 10), // Time for each text to scroll across
-      vsync: this,
-    );
+  bool get wantKeepAlive => true;
+
+  String _getLocalizedText(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final currentLanguage = languageProvider.currentLanguage.code;
     
-    _animation = Tween<double>(
-      begin: 1.0, // Start from right (outside screen)
-      end: -1.0,  // End at left (outside screen)
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.linear,
-    ));
-
-    if (widget.infoItems.isNotEmpty) {
-      _currentText = widget.infoItems[0].title;
-      _startContinuousScrolling();
-    }
-
-    // Listen for animation completion to move to next item
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _moveToNextItem();
+    // Get the appropriate text based on current language
+    List<String> titles = widget.infoItems.map((item) {
+      switch (currentLanguage) {
+        case 'ar':
+          return item.atitle.isNotEmpty ? item.atitle : item.title;
+        case 'fa': // Kurdish
+          return item.ktitle.isNotEmpty ? item.ktitle : item.title;
+        default: // English
+          return item.title;
       }
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _startContinuousScrolling() {
-    _animationController.forward();
-  }
-
-  void _moveToNextItem() {
-    if (widget.infoItems.length > 1) {
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % widget.infoItems.length;
-        _currentText = widget.infoItems[_currentIndex].title;
-      });
-    }
+    }).toList();
     
-    // Reset animation and start again
-    _animationController.reset();
-    _animationController.forward();
+    // Join all texts with separators
+    return titles.join('   •   ');
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    
+    // Listen to language provider changes so widget rebuilds when language is loaded on app restart
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final isRtl = languageProvider.isRtl;
+    final textDirection = isRtl ? TextDirection.rtl : TextDirection.ltr;
+    
     if (widget.infoItems.isEmpty) {
-      return const Text(
-        'PLEASE ENTER YOUR NOTE HERE TO ALERT YOUR USERS',
-        style: TextStyle(
+      return Container(
+        height: 40,
+        alignment: Alignment.center,
+        child: const Text(
+          'PLEASE ENTER YOUR NOTE HERE TO ALERT YOUR USERS',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final combinedText = _getLocalizedText(context);
+    
+    // If text is short enough, don't animate
+    if (combinedText.length < 50) {
+      return SizedBox(
+        height: 40,
+        child: Center(
+          child: Text(
+            combinedText,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+            textDirection: textDirection,
+          ),
+        ),
+      );
+    }
+    
+    return SizedBox(
+      height: 40,
+      child: Marquee(
+        // Add key to force rebuild when language changes
+        key: ValueKey('${languageProvider.currentLanguage.code}_${combinedText.hashCode}'),
+        text: combinedText,
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
-        textAlign: TextAlign.center,
-      );
-    }
-
-    return SizedBox(
-      height: 30,
-      child: ClipRect(
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(
-                _animation.value * (MediaQuery.of(context).size.width + 200), // Extra width to ensure complete scroll
-                0,
-              ),
-              child: Text(
-                _currentText,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.visible,
-              ),
-            );
-          },
-        ),
+        scrollAxis: Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        blankSpace: 50.0,
+        velocity: isRtl ? -30.0 : 30.0,
+        startPadding: 10.0,
+        accelerationDuration: const Duration(seconds: 2),
+        accelerationCurve: Curves.linear,
+        decelerationDuration: const Duration(seconds: 1),
+        decelerationCurve: Curves.easeOut,
+        pauseAfterRound: const Duration(seconds: 2),
+        // Explicitly set text direction for the Marquee widget
+        textDirection: textDirection,
       ),
     );
   }

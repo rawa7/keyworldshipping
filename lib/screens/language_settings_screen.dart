@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/language_model.dart';
 import '../utils/language_provider.dart';
 import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 
 class LanguageSettingsScreen extends StatelessWidget {
   const LanguageSettingsScreen({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class LanguageSettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.languageSettings),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -35,7 +36,7 @@ class LanguageSettingsScreen extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: AppColors.primaryBlueWithOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -43,7 +44,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                   language.code.toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: AppColors.primaryBlue,
                   ),
                 ),
               ),
@@ -56,7 +57,7 @@ class LanguageSettingsScreen extends StatelessWidget {
             ),
             subtitle: Text(language.localName),
             trailing: isSelected 
-                ? const Icon(Icons.check_circle, color: Colors.blue)
+                ? const Icon(Icons.check_circle, color: AppColors.primaryBlue)
                 : null,
             onTap: () {
               languageProvider.changeLanguage(language);

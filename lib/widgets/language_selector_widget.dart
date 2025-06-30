@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/language_model.dart';
 import '../utils/language_provider.dart';
+import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 
 class LanguageSelectorWidget extends StatelessWidget {
   const LanguageSelectorWidget({Key? key}) : super(key: key);
@@ -38,7 +40,7 @@ class LanguageSelectorWidget extends StatelessWidget {
               children: [
                 Text(language.localName),
                 const SizedBox(width: 8),
-                if (isSelected) const Icon(Icons.check, color: Colors.blue),
+                if (isSelected) const Icon(Icons.check, color: AppColors.primaryBlue),
               ],
             ),
           );

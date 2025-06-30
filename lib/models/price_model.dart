@@ -10,6 +10,8 @@ class PriceModel {
   final String transportKu;
   final String price;
   final String? note;
+  final String? anote;
+  final String? knote;
   final String createdAt;
 
   PriceModel({
@@ -24,6 +26,8 @@ class PriceModel {
     required this.transportKu,
     required this.price,
     this.note,
+    this.anote,
+    this.knote,
     required this.createdAt,
   });
 
@@ -40,11 +44,29 @@ class PriceModel {
       transportKu: json['transport_ku'] as String,
       price: json['price'] as String,
       note: json['note'] as String?,
+      anote: json['anote'] as String?,
+      knote: json['knote'] as String?,
       createdAt: json['created_at'] as String,
     );
   }
 
   String getFormattedPrice() {
     return '$price\$';
+  }
+
+  // Helper method to get localized note based on language
+  String getLocalizedNote(String languageCode, String fallbackText) {
+    switch (languageCode) {
+      case 'ar':
+        return anote?.isNotEmpty == true 
+            ? anote! 
+            : (note?.isNotEmpty == true ? note! : fallbackText);
+      case 'fa':
+        return knote?.isNotEmpty == true 
+            ? knote! 
+            : (note?.isNotEmpty == true ? note! : fallbackText);
+      default: // 'en'
+        return note?.isNotEmpty == true ? note! : fallbackText;
+    }
   }
 } 

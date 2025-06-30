@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_localizations.dart';
+import '../widgets/whatsapp_floating_button.dart';
 import 'auth_screen.dart';
 
 class PreAuthScreen extends StatefulWidget {
@@ -16,8 +19,11 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
   final AuthService _authService = AuthService();
   
   bool _isLoading = false;
-  bool _isGuestLoading = false;
   String? _errorMessage;
+  
+  // HIDE GUEST LOGIN: Set to false to keep guest login button hidden
+  // Can be changed to true if guest login needs to be re-enabled later
+  static const bool _showGuestLogin = false;
 
   @override
   void dispose() {
@@ -25,7 +31,23 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
     super.dispose();
   }
 
-  Future<void> _checkUserAndProceed() async {
+  Widget _buildFallbackLogo() {
+    return Image.asset(
+      'assets/logo.png',
+      width: 60,
+      height: 60,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return const Icon(
+          Icons.shopping_bag,
+          size: 40,
+          color: AppColors.primaryBlue,
+        );
+      },
+    );
+  }
+
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -33,49 +55,35 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
       });
 
       try {
-        print('🔐 Starting login process...');
-        print('🔐 Phone number to check: ${_phoneController.text}');
+        final user = await _authService.getUserByPhone(_phoneController.text);
         
-        // Check if user exists with this phone number
-        final existingUser = await _authService.getUserByPhone(_phoneController.text);
-        
-        if (existingUser != null) {
-          print('🔐 User found: ${existingUser.toJson()}');
-          // User exists, log them in directly
-          await _authService.saveUserLocally(existingUser);
-          
+        if (user != null) {
+          // User exists, save locally and navigate to home screen
+          await _authService.saveUserLocally(user);
           if (!mounted) return;
-          // Navigate to home screen and clear the stack
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         } else {
-          print('🔐 No user found with phone: ${_phoneController.text}');
-          // User doesn't exist, show toast and option to register
+          // User doesn't exist, show registration option
           if (!mounted) return;
-          
+          final localizations = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('You are not registered'),
-              backgroundColor: Colors.orange,
+              content: Text(localizations.notRegistered),
               action: SnackBarAction(
-                label: 'Register',
-                textColor: Colors.white,
+                label: localizations.createAccount,
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AuthScreen(
-                        phone: _phoneController.text,
-                      ),
+                      builder: (context) => AuthScreen(phone: _phoneController.text),
                     ),
                   );
                 },
               ),
-              duration: const Duration(seconds: 4),
             ),
           );
         }
       } catch (e) {
-        print('❌ Login error: $e');
         setState(() {
           _errorMessage = e.toString();
         });
@@ -88,248 +96,217 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
       }
     }
   }
-  
-  Future<void> _continueAsGuest() async {
-    setState(() {
-      _isGuestLoading = true;
-      _errorMessage = null;
-    });
-    
-    try {
-      await _authService.continueAsGuest();
-      
-      if (!mounted) return;
-      // Navigate to home screen and clear the stack
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGuestLoading = false;
-        });
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 60),
-                  
-                  // Logo and icon
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.teal, width: 2),
-                        ),
-                        child: const Icon(Icons.key, color: Colors.amber, size: 32),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Title
-                  const Text(
-                    'Welcome to KeyWorld',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  const Text(
-                    'Please enter your phone number to login',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Phone Number field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(localizations.login),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
+      ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Phone Number',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(height: 60),
+                      
+                      // Logo and icon
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlueShade(100),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.teal, width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: _buildFallbackLogo(),
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Welcome Text
+                      Text(
+                        localizations.welcomeToKeyWorld,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Text(
+                        localizations.enterPhoneToLogin,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Phone Number Input
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
+                        enabled: !_isLoading,
                         decoration: InputDecoration(
-                          hintText: 'Enter phone number',
-                          fillColor: Colors.grey[200],
-                          filled: true,
+                          labelText: localizations.phoneNumber,
+                          hintText: localizations.enterPhoneNumber,
+                          prefixIcon: const Icon(Icons.phone),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
+                            return localizations.invalidPhone;
                           }
                           return null;
                         },
                       ),
-                    ],
-                  ),
-                  
-                  // Error message
-                  if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _checkUserAndProceed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Register Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AuthScreen(),
+                      
+                      // Error message
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red),
                           ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.blue),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Guest Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: _isGuestLoading ? null : _continueAsGuest,
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: _isGuestLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.blue,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.person_outline, color: Colors.blue),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Continue as Guest',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w500,
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleSubmit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  localizations.login,
+                                  style: const TextStyle(
                                     fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Register Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AuthScreen(),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primaryBlue),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                    ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: Text(
+                            localizations.register,
+                            style: const TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // GUEST LOGIN BUTTON - HIDDEN
+                      // Uncomment the section below to re-enable guest login
+                      if (_showGuestLogin) ...[
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () async {
+                              try {
+                                await _authService.continueAsGuest();
+                                if (!mounted) return;
+                                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to continue as guest: $e')),
+                                );
+                              }
+                            },
+                            child: Text(
+                              localizations.continueAsGuest,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      
+                      // Add bottom padding to prevent content from being hidden behind FAB
+                      const SizedBox(height: 80),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          const WhatsAppFloatingButton(heroTag: "pre_auth_help_fab"),
+        ],
       ),
     );
   }

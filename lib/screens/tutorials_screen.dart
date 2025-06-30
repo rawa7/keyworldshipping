@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../models/app_model.dart';
 import '../models/tutorial_model.dart';
 import '../services/tutorial_service.dart';
 import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
+import '../utils/language_provider.dart';
 import 'tutorial_detail_screen.dart';
 
 class TutorialsScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
   List<TutorialModel> _tutorials = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String? _currentLanguageCode;
 
   @override
   void initState() {
@@ -27,14 +31,44 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
     _fetchTutorials();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Check if language has changed
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final newLanguageCode = languageProvider.currentLanguage.code;
+    
+    if (_currentLanguageCode != null && _currentLanguageCode != newLanguageCode) {
+      print('🌐 Language changed from $_currentLanguageCode to $newLanguageCode, refetching tutorials');
+      _fetchTutorials();
+    }
+    
+    _currentLanguageCode = newLanguageCode;
+  }
+
   Future<void> _fetchTutorials() async {
     try {
-      final tutorials = await _tutorialService.fetchTutorials(widget.app.id);
+      print('🚀 Fetching tutorials for app: ${widget.app.id} (${widget.app.name})');
+      
+      // Get current language from provider
+      final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+      final currentLanguageCode = languageProvider.currentLanguage.code;
+      
+      print('🌐 Current language: $currentLanguageCode');
+      
+      final tutorials = await _tutorialService.fetchTutorials(
+        widget.app.id, 
+        languageCode: currentLanguageCode
+      );
+      print('✅ Successfully fetched ${tutorials.length} tutorials for language: $currentLanguageCode');
+      
       setState(() {
         _tutorials = tutorials;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error fetching tutorials: $e');
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -46,13 +80,17 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.app.name} ${localizations.tutorials}'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: _buildBody(),
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('${widget.app.name} ${localizations.tutorials}'),
+            backgroundColor: AppColors.primaryBlue,
+            foregroundColor: Colors.white,
+          ),
+          body: _buildBody(),
+        );
+      },
     );
   }
 
@@ -67,39 +105,106 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
 
     if (_errorMessage != null) {
       return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
-              localizations.noData,
+                'Error Loading Tutorials',
               style: TextStyle(
                 color: Colors.grey[700],
-                fontSize: 16,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'App: ${widget.app.name} (ID: ${widget.app.id})',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+              ),
+                textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isLoading = true;
-                  _errorMessage = null;
-                });
-                _fetchTutorials();
-              },
-              child: Text(localizations.retry),
-            ),
+              Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+                          ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _errorMessage = null;
+                  });
+                  _fetchTutorials();
+                },
+                child: Text(localizations.retry),
+              ),
           ],
+          ),
         ),
       );
     }
 
     if (_tutorials.isEmpty) {
       return Center(
-        child: Text(
-          '${localizations.noData} ${widget.app.name}',
-          style: const TextStyle(fontSize: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.video_library_outlined,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Tutorials Available',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No tutorials found for ${widget.app.name}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'App ID: ${widget.app.id}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  _fetchTutorials();
+                },
+                child: Text(localizations.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -175,14 +280,14 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                     children: [
                       Icon(
                         Icons.play_circle_outline,
-                        color: Colors.red[700],
+                        color: AppColors.primaryBlueShade(700),
                         size: 16,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         localizations.watchVideo,
                         style: TextStyle(
-                          color: Colors.blue[700],
+                          color: AppColors.primaryBlueShade(700),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -227,4 +332,5 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
             ),
           );
   }
+
 } 

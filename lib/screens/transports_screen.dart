@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../models/transport_model.dart';
+import '../models/search_response_model.dart';
+import '../models/user_model.dart';
 import '../services/transport_service.dart';
+import '../services/auth_service.dart';
 import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 import 'transport_detail_screen.dart';
 import 'transport_type_screen.dart';
+import 'item_detail_screen.dart';
+import 'search_not_found_screen.dart';
 
 class TransportsScreen extends StatefulWidget {
   const TransportsScreen({Key? key}) : super(key: key);
@@ -12,8 +19,9 @@ class TransportsScreen extends StatefulWidget {
   State<TransportsScreen> createState() => _TransportsScreenState();
 }
 
-class _TransportsScreenState extends State<TransportsScreen> {
+class _TransportsScreenState extends State<TransportsScreen> with AutomaticKeepAliveClientMixin {
   final TransportService _transportService = TransportService();
+  final AuthService _authService = AuthService();
   final TextEditingController _searchController = TextEditingController();
   List<TransportModel> _transports = [];
   List<TransportModel> _filteredTransports = [];
@@ -21,11 +29,35 @@ class _TransportsScreenState extends State<TransportsScreen> {
   bool _isSearching = false;
   String? _errorMessage;
   TransportModel? _searchResult;
+  UserModel? _currentUser;
+  
+  // Add flag to prevent multiple simultaneous calls
+  bool _isFetchingTransports = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTransports();
+    // Add a small delay to prevent immediate multiple calls
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchTransports();
+      _loadUserData();
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = await _authService.getLocalUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
   }
 
   @override
@@ -35,77 +67,144 @@ class _TransportsScreenState extends State<TransportsScreen> {
   }
 
   Future<void> _fetchTransports() async {
+    if (_isFetchingTransports) return; // Prevent multiple simultaneous calls
+    
+    _isFetchingTransports = true;
     try {
       final transports = await _transportService.fetchTransports();
-      setState(() {
-        _transports = transports;
-        _filteredTransports = transports;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _transports = transports;
+          _filteredTransports = transports;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    } finally {
+      _isFetchingTransports = false;
     }
   }
 
   Future<void> _searchTransport(String transportCode) async {
     if (transportCode.isEmpty) {
-      setState(() {
-        _filteredTransports = _transports;
-        _isSearching = false;
-        _searchResult = null;
-      });
+      if (mounted) {
+        setState(() {
+          _filteredTransports = _transports;
+          _isSearching = false;
+          _searchResult = null;
+        });
+      }
       return;
     }
 
-    setState(() {
-      _isSearching = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isSearching = true;
+      });
+    }
 
     try {
-      final transport = await _transportService.getTransportByCode(transportCode);
-      setState(() {
-        _searchResult = transport;
-        // Also navigate to the details screen
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TransportDetailScreen(transport: transport),
-            ),
-          );
+      final searchResponse = await _transportService.searchByCode(transportCode);
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
         });
-        _isSearching = false;
-      });
+        
+        // Navigate based on search status
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            if (searchResponse.isTransportOnly && searchResponse.transport != null) {
+              // Status 1: Show transport details only
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransportDetailScreen(transport: searchResponse.transport!),
+                ),
+              );
+            } else if (searchResponse.isTransportWithItem && 
+                       searchResponse.transport != null && 
+                       searchResponse.item != null) {
+              // Status 2: Show both transport and item details
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ItemDetailScreen(
+                    transport: searchResponse.transport!,
+                    item: searchResponse.item!,
+                  ),
+                ),
+              );
+            } else if (searchResponse.isNotFound) {
+              // Status 0: Show not found screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchNotFoundScreen(
+                    searchCode: transportCode,
+                    message: searchResponse.message,
+                    onSearchAgain: () {
+                      Navigator.pop(context);
+                      _searchController.clear();
+                      FocusScope.of(context).requestFocus(FocusNode());
+                    },
+                  ),
+                ),
+              );
+            }
+          }
+        });
+      }
     } catch (e) {
-      setState(() {
-        _searchResult = null;
-        _isSearching = false;
-        // Show a snackbar with the error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Transport not found: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          _searchResult = null;
+          _isSearching = false;
+        });
+        
+        // Navigate to error screen
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SearchNotFoundScreen(
+                  searchCode: transportCode,
+                  message: 'Network error: ${e.toString()}',
+                  onSearchAgain: () {
+                    Navigator.pop(context);
+                    _searchController.clear();
+                    FocusScope.of(context).requestFocus(FocusNode());
+                  },
+                ),
+              ),
+            );
+          }
+        });
+      }
     }
   }
 
   void _filterTransports(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredTransports = _transports;
-      } else {
-        _filteredTransports = _transports.where((transport) {
-          return transport.transportCode.toLowerCase().contains(query.toLowerCase()) ||
-              transport.statusName.toLowerCase().contains(query.toLowerCase()) ||
-              transport.cityName.toLowerCase().contains(query.toLowerCase());
-        }).toList();
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (query.isEmpty) {
+          _filteredTransports = _transports;
+        } else {
+          _filteredTransports = _transports.where((transport) {
+            return transport.transportCode.toLowerCase().contains(query.toLowerCase()) ||
+                transport.statusName.toLowerCase().contains(query.toLowerCase()) ||
+                transport.cityName.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+        }
+      });
+    }
   }
 
   List<TransportModel> _getTransportsByType(String transportType) {
@@ -123,7 +222,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
     final localizations = AppLocalizations.of(context);
     
     return Container(
-      color: Colors.blue,
+      color: AppColors.primaryBlue,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
@@ -267,7 +366,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.primaryBlue,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       minimumSize: const Size(100, 32),
                       shape: RoundedRectangleBorder(
@@ -308,7 +407,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: AppColors.primaryBlue,
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
@@ -468,12 +567,13 @@ class _TransportsScreenState extends State<TransportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     final localizations = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.transports),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -490,7 +590,7 @@ class _TransportsScreenState extends State<TransportsScreen> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: _buildContent(),
       ),

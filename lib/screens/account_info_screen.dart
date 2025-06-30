@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../utils/app_localizations.dart';
 import '../utils/language_provider.dart';
+import '../utils/app_colors.dart';
 import '../widgets/language_selector_widget.dart';
 
 class AccountInfoScreen extends StatelessWidget {
@@ -79,7 +80,7 @@ class AccountInfoScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.account),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -98,7 +99,7 @@ class AccountInfoScreen extends StatelessWidget {
           children: [
             // Profile section with blue background
             Container(
-              color: Colors.blue,
+              color: AppColors.primaryBlue,
               padding: const EdgeInsets.symmetric(vertical: 32),
               width: double.infinity,
               child: Column(
@@ -115,7 +116,7 @@ class AccountInfoScreen extends StatelessWidget {
                       child: Text(
                         _getInitial(context),
                         style: const TextStyle(
-                          color: Colors.blue,
+                          color: AppColors.primaryBlue,
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                         ),

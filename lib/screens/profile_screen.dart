@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 import 'about_us_screen.dart';
 import 'contact_us_screen.dart';
 import 'account_info_screen.dart';
@@ -104,7 +105,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.profile),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -127,15 +128,15 @@ class ProfileScreen extends StatelessWidget {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: AppColors.primaryBlueWithOpacity(0.1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 2),
+                        border: Border.all(color: AppColors.primaryBlueWithOpacity(0.3), width: 2),
                       ),
                       child: Center(
                         child: Text(
                           _getInitial(context),
                           style: const TextStyle(
-                            color: Colors.blue,
+                            color: AppColors.primaryBlue,
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
                           ),
@@ -168,7 +169,7 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileMenuItem(
                 icon: Icons.person,
                 title: localizations.accountInfo,
-                iconColor: Colors.blue,
+                iconColor: AppColors.primaryBlue,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -182,7 +183,7 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileMenuItem(
                 icon: Icons.language,
                 title: localizations.languageSettings,
-                iconColor: Colors.blue,
+                iconColor: AppColors.primaryBlue,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -196,7 +197,7 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileMenuItem(
                 icon: Icons.info,
                 title: localizations.aboutUs,
-                iconColor: Colors.blue,
+                iconColor: AppColors.primaryBlue,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -210,7 +211,7 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileMenuItem(
                 icon: Icons.flag,
                 title: localizations.contactUs,
-                iconColor: Colors.blue,
+                iconColor: AppColors.primaryBlue,
                 onTap: () {
                   Navigator.push(
                     context,

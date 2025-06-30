@@ -43,26 +43,50 @@ class TransportModel {
 
   factory TransportModel.fromJson(Map<String, dynamic> json) {
     return TransportModel(
-      id: json['id'] as String,
+      id: json['id'].toString(),
       transportCode: json['transport_code'] as String,
       startDate: json['start_date'] as String,
       arrivalDate: json['arrival_date'] as String,
       itemCodes: json['item_codes'] as String,
-      transportTypeId: json['transport_type_id'] as String,
-      transportType: json['transport_type'] as String,
-      transportTypeAname: json['transport_type_aname'] as String,
-      transportTypeKname: json['transport_type_kname'] as String,
-      cityId: json['city_id'] as String,
-      cityName: json['city_name'] as String,
-      cityAname: json['city_aname'] as String,
-      cityKname: json['city_kname'] as String ?? '',
-      statusId: json['status_id'] as String,
-      statusName: json['status_name'] as String,
-      statusAname: json['status_aname'] as String ?? '',
-      statusKname: json['status_kname'] as String ?? '',
-      isActive: json['is_active'] as String,
+      transportTypeId: json['transport_type_id'].toString(),
+      transportType: json['transport_type'] as String? ?? '',
+      transportTypeAname: json['transport_type_aname'] as String? ?? '',
+      transportTypeKname: json['transport_type_kname'] as String? ?? '',
+      cityId: json['city_id'].toString(),
+      cityName: json['city_name'] as String? ?? '',
+      cityAname: json['city_aname'] as String? ?? '',
+      cityKname: json['city_kname'] as String? ?? '',
+      statusId: json['status_id'].toString(),
+      statusName: json['status_name'] as String? ?? '',
+      statusAname: json['status_aname'] as String? ?? '',
+      statusKname: json['status_kname'] as String? ?? '',
+      isActive: json['is_active'].toString(),
       createdAt: json['created_at'] as String,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'transport_code': transportCode,
+      'start_date': startDate,
+      'arrival_date': arrivalDate,
+      'item_codes': itemCodes,
+      'transport_type_id': transportTypeId,
+      'transport_type': transportType,
+      'transport_type_aname': transportTypeAname,
+      'transport_type_kname': transportTypeKname,
+      'city_id': cityId,
+      'city_name': cityName,
+      'city_aname': cityAname,
+      'city_kname': cityKname,
+      'status_id': statusId,
+      'status_name': statusName,
+      'status_aname': statusAname,
+      'status_kname': statusKname,
+      'is_active': isActive,
+      'created_at': createdAt,
+    };
   }
 
   // Get number of items

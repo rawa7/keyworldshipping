@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/transaction_service.dart';
 import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 
 class AccountStatementScreen extends StatefulWidget {
   static const routeName = '/account-statement';
@@ -68,7 +69,7 @@ class _AccountStatementScreenState extends State<AccountStatementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.accountStatement),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
       ),
       body: _buildBody(localizations),

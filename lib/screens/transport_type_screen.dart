@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../models/transport_model.dart';
+import '../models/search_response_model.dart';
 import '../services/transport_service.dart';
 import 'transport_detail_screen.dart';
+import 'item_detail_screen.dart';
+import 'search_not_found_screen.dart';
+import '../utils/app_localizations.dart';
+import '../utils/app_colors.dart';
 
 class TransportTypeScreen extends StatefulWidget {
   final String transportType;
@@ -80,15 +85,69 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
       // If no results found locally, try API search
       if (results.isEmpty) {
         try {
-          final transport = await _transportService.getTransportByCode(code);
-          // Only include if it matches the current transport type
-          if (transport.transportType.toLowerCase() == widget.transportType.toLowerCase()) {
-            setState(() {
-              _filteredTransports = [transport];
-            });
+          final searchResponse = await _transportService.searchByCode(code);
+          
+          if (searchResponse.isTransportOnly && searchResponse.transport != null) {
+            // Only include if it matches the current transport type
+            if (searchResponse.transport!.transportType.toLowerCase() == widget.transportType.toLowerCase()) {
+              setState(() {
+                _filteredTransports = [searchResponse.transport!];
+              });
+            } else {
+              // Navigate to transport details even if it's different type
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransportDetailScreen(transport: searchResponse.transport!),
+                ),
+              );
+            }
+          } else if (searchResponse.isTransportWithItem && 
+                     searchResponse.transport != null && 
+                     searchResponse.item != null) {
+            // Navigate to item details screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ItemDetailScreen(
+                  transport: searchResponse.transport!,
+                  item: searchResponse.item!,
+                ),
+              ),
+            );
+          } else if (searchResponse.isNotFound) {
+            // Navigate to not found screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SearchNotFoundScreen(
+                  searchCode: code,
+                  message: searchResponse.message,
+                  onSearchAgain: () {
+                    Navigator.pop(context);
+                    _searchController.clear();
+                    FocusScope.of(context).requestFocus(FocusNode());
+                  },
+                ),
+              ),
+            );
           }
         } catch (e) {
-          // Just keep empty results
+          // Navigate to error screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchNotFoundScreen(
+                searchCode: code,
+                message: 'Network error: ${e.toString()}',
+                onSearchAgain: () {
+                  Navigator.pop(context);
+                  _searchController.clear();
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
@@ -100,7 +159,7 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
 
   Widget _buildTableHeader() {
     return Container(
-      color: Colors.blue,
+      color: AppColors.primaryBlue,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: const Row(
         children: [
@@ -254,7 +313,7 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
           const SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: AppColors.primaryBlue,
               borderRadius: BorderRadius.circular(8),
             ),
             child: TextButton(
@@ -300,7 +359,7 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       width: double.infinity,
-      color: Colors.blue,
+      color: AppColors.primaryBlue,
       child: Column(
         children: [
           SizedBox(
@@ -443,7 +502,7 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
