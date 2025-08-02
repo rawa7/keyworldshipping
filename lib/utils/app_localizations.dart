@@ -282,7 +282,7 @@ class AppLocalizations {
       'enterFirstName': 'Enter first name',
       'lastName': 'Last Name',
       'enterLastName': 'Enter last name',
-      'selectCity': 'Select your city',
+      'selectCity': 'Select your cit and street',
       'haveUsername': 'I have a username',
       'enterUsername': 'Enter username (must start with H.E)',
       'usernameRequired': 'Please enter username',
@@ -545,7 +545,7 @@ class AppLocalizations {
       'failed': 'فشل',
       
       // Login Screen
-      'welcomeToKeyWorld': 'مرحباً بك في كي ورلد',
+      'welcomeToKeyWorld': 'مرحباً بك في  key World',
       'enterPhoneToLogin': 'الرجاء إدخال رقم هاتفك لتسجيل الدخول',
       'login': 'تسجيل الدخول',
       'register': 'تسجيل',
@@ -563,8 +563,8 @@ class AppLocalizations {
       'lastName': 'اسم العائلة',
       'enterFirstName': 'أدخل اسمك الأول',
       'enterLastName': 'أدخل اسم العائلة',
-      'city': 'المدينة',
-      'selectCity': 'اختر مدينتك',
+      'city': 'المدينة و الشارع',
+      'selectCity': 'اختر مدينتك و منطقتك',
       'username': 'اسم المستخدم',
       'haveUsername': 'لدي اسم مستخدم',
       'noUsername': 'ليس لدي اسم مستخدم',
@@ -763,7 +763,7 @@ class AppLocalizations {
       'timeline': 'خەطی کات',
       'statusDescription': 'ڕوونکردنەوەی بارودۆخ',
       'origin': 'سەرچاوە',
-      'destination': 'مەبەست',
+      'destination': 'شوێن',
 
       // Address Detail Screen
       'personalInfo': 'زانیاری تایبەتی',
@@ -785,7 +785,7 @@ class AppLocalizations {
       'itemCode': 'کۆدی بابەت',
       'itemName': 'ناوی بابەت',
       'description': 'ڕوونکردنەوە',
-      'weight': 'قەبارە',
+      'weight': 'CBM',
       'dimensions': 'قەبارەکان',
       'value': 'نرخی',
       'addedDate': 'ڕۆژی زیادکردن',
@@ -807,7 +807,7 @@ class AppLocalizations {
       'retry': 'دووبارە هەوڵبدەوە',
 
       // Item Detail Screen - Additional Keys
-      'quantity': 'بڕ',
+      'quantity': 'ژ.پاكەیج',
       'volume': 'هەجم',
       'addedOn': 'زیادکرا لە',
       'transportCode': 'کۆدی گواستنەوە',
@@ -829,7 +829,7 @@ class AppLocalizations {
       'failed': 'سەرکەوتوو نەبوو',
 
       // Login Screen
-      'welcomeToKeyWorld': 'بەخێربێیت بۆ جیهانی کلیل',
+      'welcomeToKeyWorld': 'بەخێربێیت بۆ Key World',
       'enterPhoneToLogin': 'تکایە ژمارەی تەلەفۆنت بنووسە بۆ چوونەژوورەوە',
       'login': 'چوونەژوورەوە',
       'register': 'تۆمارکردن',
@@ -847,8 +847,8 @@ class AppLocalizations {
       'lastName': 'ناوی باوک',
       'enterFirstName': 'ناوی یەکەمت بنووسە',
       'enterLastName': 'ناوی باوکت بنووسە',
-      'city': 'شار',
-      'selectCity': 'شارەکەت هەڵبژێرە',
+      'city': ' شار و گەڕەك',
+      'selectCity': ' شارەکەت و گەڕەكەت هەڵبژێرە',
       'username': 'ناوی بەکارهێنەر',
       'haveUsername': 'من ناوی بەکارهێنەر هەیە',
       'noUsername': 'من ناوی بەکارهێنەر نییە',

@@ -667,6 +667,37 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
     }
   }
 
+  Future<void> _handleRefresh() async {
+    // Reset loading states
+    if (mounted) {
+      setState(() {
+        _isLoadingBanners = true;
+        _isLoadingApps = true;
+        _isLoadingInfo = true;
+        _isLoadingStories = true;
+        _isLoadingTransports = true;
+        _isLoadingNotifications = true;
+        
+        // Clear error messages
+        _bannerErrorMessage = null;
+        _appErrorMessage = null;
+        _infoErrorMessage = null;
+        _storyErrorMessage = null;
+        _transportErrorMessage = null;
+      });
+    }
+
+    // Fetch all data concurrently
+    await Future.wait([
+      _fetchBanners(),
+      _fetchApps(),
+      _fetchInfo(),
+      _fetchStories(),
+      _fetchTransports(),
+      _fetchNotifications(),
+    ]);
+  }
+
   Widget _buildBannerSection() {
     final localizations = AppLocalizations.of(context);
     
@@ -1334,23 +1365,29 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
         children: [
           _buildHeader(),
           Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInfoSection(),
-                    const SizedBox(height: 24),
-                    _buildStorySection(),
-                    const SizedBox(height: 24),
-                    _buildBannerSection(),
-                    const SizedBox(height: 16),
-                    _buildBannerIndicators(),
-                    const SizedBox(height: 32),
-                    ..._buildCountrySections(),
-                    const SizedBox(height: 120),
-                  ],
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppColors.primaryBlue,
+              backgroundColor: Colors.white,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoSection(),
+                      const SizedBox(height: 24),
+                      _buildStorySection(),
+                      const SizedBox(height: 24),
+                      _buildBannerSection(),
+                      const SizedBox(height: 16),
+                      _buildBannerIndicators(),
+                      const SizedBox(height: 32),
+                      ..._buildCountrySections(),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1729,7 +1766,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
     return Wrap(
       spacing: 16,
       runSpacing: 16,
-      alignment: WrapAlignment.spaceEvenly,
+      alignment: WrapAlignment.start,
       children: filteredApps.take(8).map((app) => 
         GestureDetector(
           onTap: () {

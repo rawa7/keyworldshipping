@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
 import '../models/transport_model.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_localizations.dart';
+import '../utils/language_provider.dart';
 
 class TransportDetailScreen extends StatefulWidget {
   final TransportModel transport;
@@ -124,14 +126,14 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
             // Shipping Method
             _buildInfoCard(
               title: localizations.shippingMethod,
-              iconData: Icons.local_shipping,
+              iconData: _getTransportIcon(),
               content: _buildMethodContent(),
             ),
 
             // Shipping Route
             _buildInfoCard(
               title: localizations.shippingRoute,
-              iconData: Icons.route,
+              iconData: Icons.alt_route,
               content: _buildRouteContent(localizations),
             ),
 
@@ -162,34 +164,44 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
     String animationSubtitle;
     IconData fallbackIcon;
 
-    switch (widget.transport.transportType.toLowerCase()) {
-      case 'airplane':
-        animationAsset = 'assets/airplane.json';
-        animationDescription = 'Air Transport';
-        animationSubtitle = 'Fast & Secure Delivery';
-        fallbackIcon = Icons.airplanemode_active;
-        break;
-      case 'ship':
-      case 'shipment':
-        animationAsset = 'assets/shipment.json';
-        animationDescription = 'Ship Transport';
-        animationSubtitle = 'Ocean Freight Service';
-        fallbackIcon = Icons.directions_boat;
-        break;
-      case 'train':
-        animationAsset = 'assets/landtransport.json';
-        animationDescription = 'Train Transport';
-        animationSubtitle = 'Rail Freight Service';
-        fallbackIcon = Icons.train;
-        break;
-      case 'truck':
-      case 'land transport':
-      default:
-        animationAsset = 'assets/landtransport.json';
-        animationDescription = 'Land Transport';
-        animationSubtitle = 'Ground Freight Service';
-        fallbackIcon = Icons.local_shipping;
-        break;
+    final transportType = widget.transport.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      animationAsset = 'assets/airplane.json';
+      animationDescription = 'Air Transport';
+      animationSubtitle = 'Fast & Secure Delivery';
+      fallbackIcon = Icons.airplanemode_active;
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      animationAsset = 'assets/shipment.json';
+      animationDescription = 'Ship Transport';
+      animationSubtitle = 'Ocean Freight Service';
+      fallbackIcon = Icons.directions_boat;
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      animationAsset = 'assets/landtransport.json';
+      animationDescription = 'Train Transport';
+      animationSubtitle = 'Rail Freight Service';
+      fallbackIcon = Icons.train;
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      animationAsset = 'assets/landtransport.json';
+      animationDescription = 'Land Transport';
+      animationSubtitle = 'Ground Freight Service';
+      fallbackIcon = Icons.local_shipping;
     }
 
     return Container(
@@ -333,24 +345,24 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.green.withOpacity(0.15),
-              Colors.green.withOpacity(0.05),
+              _getStatusColor().withOpacity(0.15),
+              _getStatusColor().withOpacity(0.05),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
+          border: Border.all(color: _getStatusColor().withOpacity(0.3)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 24),
-            SizedBox(width: 8),
+            Icon(_getStatusIcon(), color: _getStatusColor(), size: 24),
+            const SizedBox(width: 8),
             Text(
-              'Delivered!',
+              widget.transport.statusName,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: _getStatusColor(),
               ),
             ),
           ],
@@ -537,7 +549,78 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
     );
   }
 
+  IconData _getTransportIcon() {
+    final transportType = widget.transport.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      return Icons.airplanemode_active;
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      return Icons.directions_boat;
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      return Icons.train;
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      return Icons.local_shipping;
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (widget.transport.statusName.toLowerCase()) {
+      case 'delivered':
+      case 'completed':
+        return Icons.check_circle;
+      case 'in transit':
+      case 'shipping':
+        return Icons.local_shipping;
+      case 'pending':
+      case 'waiting':
+        return Icons.schedule;
+      case 'cancelled':
+      case 'failed':
+        return Icons.cancel;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _getStatusColor() {
+    switch (widget.transport.statusName.toLowerCase()) {
+      case 'delivered':
+      case 'completed':
+        return Colors.green;
+      case 'in transit':
+      case 'shipping':
+        return AppColors.primaryBlue;
+      case 'pending':
+      case 'waiting':
+        return Colors.orange;
+      case 'cancelled':
+      case 'failed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildRouteContent(AppLocalizations localizations) {
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final isRtl = languageProvider.isRtl;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
@@ -546,7 +629,7 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                   children: [
                     Text(
                       localizations.origin,
@@ -572,14 +655,17 @@ class _TransportDetailScreenState extends State<TransportDetailScreen> {
                   color: AppColors.primaryBlueWithOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.local_shipping,
-                  color: AppColors.primaryBlue,
+                child: Transform.scale(
+                  scaleX: isRtl ? -1 : 1,
+                  child: Icon(
+                    _getTransportIcon(),
+                    color: AppColors.primaryBlue,
+                  ),
                 ),
               ),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                   children: [
                     Text(
                       localizations.destination,

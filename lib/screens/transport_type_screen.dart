@@ -339,21 +339,32 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
     String lottieAsset;
     String title = 'LIST OF SHIPMENTS ARRIVING BY ${widget.transportType.toUpperCase()}';
     
-    switch (widget.transportType.toLowerCase()) {
-      case 'airplane':
-        lottieAsset = 'assets/airplane.json';
-        break;
-      case 'ship':
-      case 'shipment':
-        lottieAsset = 'assets/shipment.json';
-        break;
-      case 'train':
-        lottieAsset = 'assets/landtransport.json';
-        break;
-      case 'truck':
-      case 'land transport':
-      default:
-        lottieAsset = 'assets/landtransport.json';
+    final transportType = widget.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      lottieAsset = 'assets/airplane.json';
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      lottieAsset = 'assets/shipment.json';
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      lottieAsset = 'assets/landtransport.json';
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      lottieAsset = 'assets/landtransport.json';
     }
     
     return Container(
@@ -395,18 +406,32 @@ class _TransportTypeScreenState extends State<TransportTypeScreen> {
   }
   
   IconData _getIconForTransportType() {
-    switch (widget.transportType.toLowerCase()) {
-      case 'airplane':
-        return Icons.airplanemode_active;
-      case 'ship':
-      case 'shipment':
-        return Icons.directions_boat;
-      case 'train':
-        return Icons.train;
-      case 'truck':
-      case 'land transport':
-      default:
-        return Icons.local_shipping;
+    final transportType = widget.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      return Icons.airplanemode_active;
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      return Icons.directions_boat;
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      return Icons.train;
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      return Icons.local_shipping;
     }
   }
 

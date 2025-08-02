@@ -149,43 +149,69 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: widget.item.image.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.inventory,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        localizations.itemImage,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
+            ? GestureDetector(
+                onTap: () => _showFullScreenImage(context, imageUrl),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: CircularProgressIndicator(),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        localizations.failedToLoad,
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 12,
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[200],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              localizations.itemImage,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              localizations.failedToLoad,
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    // Overlay icon to indicate image is tappable
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.fullscreen,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Container(
@@ -213,40 +239,145 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            children: [
+              // Full screen image with zoom and pan
+              InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Center(
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.white,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Failed to load image',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Close button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+              // Item code label
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 20,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    widget.item.code,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildTransportAnimation() {
     String animationAsset;
     String animationDescription;
     String animationSubtitle;
     IconData fallbackIcon;
 
-    switch (widget.transport.transportType.toLowerCase()) {
-      case 'airplane':
-        animationAsset = 'assets/airplane.json';
-        animationDescription = 'Air Transport';
-        animationSubtitle = 'Fast & Secure Delivery';
-        fallbackIcon = Icons.airplanemode_active;
-        break;
-      case 'ship':
-      case 'shipment':
-        animationAsset = 'assets/shipment.json';
-        animationDescription = 'Ship Transport';
-        animationSubtitle = 'Ocean Freight Service';
-        fallbackIcon = Icons.directions_boat;
-        break;
-      case 'train':
-        animationAsset = 'assets/landtransport.json';
-        animationDescription = 'Train Transport';
-        animationSubtitle = 'Rail Freight Service';
-        fallbackIcon = Icons.train;
-        break;
-      case 'truck':
-      case 'land transport':
-      default:
-        animationAsset = 'assets/landtransport.json';
-        animationDescription = 'Land Transport';
-        animationSubtitle = 'Ground Freight Service';
-        fallbackIcon = Icons.local_shipping;
-        break;
+    final transportType = widget.transport.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      animationAsset = 'assets/airplane.json';
+      animationDescription = 'Air Transport';
+      animationSubtitle = 'Fast & Secure Delivery';
+      fallbackIcon = Icons.airplanemode_active;
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      animationAsset = 'assets/shipment.json';
+      animationDescription = 'Ship Transport';
+      animationSubtitle = 'Ocean Freight Service';
+      fallbackIcon = Icons.directions_boat;
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      animationAsset = 'assets/landtransport.json';
+      animationDescription = 'Train Transport';
+      animationSubtitle = 'Rail Freight Service';
+      fallbackIcon = Icons.train;
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      animationAsset = 'assets/landtransport.json';
+      animationDescription = 'Land Transport';
+      animationSubtitle = 'Ground Freight Service';
+      fallbackIcon = Icons.local_shipping;
     }
 
     return Container(
@@ -545,7 +676,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _buildInfoRow('${localizations.quantity}:', '${widget.item.quantity}', Icons.format_list_numbered),
           _buildInfoRow('${localizations.weight}:', '${widget.item.weight} ${localizations.kg}', Icons.scale),
           _buildInfoRow('${localizations.volume}:', '${widget.item.volume} m³', Icons.straighten),
-          _buildInfoRow('${localizations.addedOn}:', _formatDate(widget.item.createdAt), Icons.calendar_today),
         ],
       ),
     );
@@ -593,7 +723,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _buildInfoRow('${localizations.destination}:', widget.transport.cityName, Icons.location_on),
           _buildInfoRow('${localizations.startDate}:', _formatDate(widget.transport.startDate), Icons.flight_takeoff),
           _buildInfoRow('${localizations.arrivalDate}:', _formatDate(widget.transport.arrivalDate), Icons.flight_land),
-          _buildInfoRow('${localizations.totalItems}:', widget.transport.getItemCount().toString(), Icons.inventory),
         ],
       ),
     );
@@ -700,18 +829,32 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
   IconData _getTransportIcon() {
-    switch (widget.transport.transportType.toLowerCase()) {
-      case 'airplane':
-        return Icons.airplanemode_active;
-      case 'ship':
-      case 'shipment':
-        return Icons.directions_boat;
-      case 'train':
-        return Icons.train;
-      case 'truck':
-      case 'land transport':
-      default:
-        return Icons.local_shipping;
+    final transportType = widget.transport.transportType.toLowerCase().trim();
+    
+    // Check for air transport variations
+    if (transportType.contains('air') || 
+        transportType.contains('plane') || 
+        transportType.contains('airplane') ||
+        transportType.contains('flight')) {
+      return Icons.airplanemode_active;
+    }
+    // Check for sea/ship transport variations
+    else if (transportType.contains('ship') || 
+             transportType.contains('sea') || 
+             transportType.contains('ocean') ||
+             transportType.contains('marine') ||
+             transportType.contains('cargo')) {
+      return Icons.directions_boat;
+    }
+    // Check for train transport variations
+    else if (transportType.contains('train') || 
+             transportType.contains('rail') ||
+             transportType.contains('railway')) {
+      return Icons.train;
+    }
+    // Default to land transport (truck, land, etc.)
+    else {
+      return Icons.local_shipping;
     }
   }
 
