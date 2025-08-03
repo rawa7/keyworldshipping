@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/app_update_service.dart';
 import '../utils/app_localizations.dart';
 import '../utils/app_colors.dart';
+import '../widgets/update_dialog.dart';
 import 'about_us_screen.dart';
 import 'contact_us_screen.dart';
 import 'account_info_screen.dart';
@@ -13,6 +15,98 @@ class ProfileScreen extends StatelessWidget {
   final UserModel? user;
   
   const ProfileScreen({Key? key, this.user}) : super(key: key);
+
+  Future<void> _checkForUpdates(BuildContext context) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Checking for updates...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final updateService = AppUpdateService();
+      final updateModel = await updateService.checkForUpdate(forceCheck: true);
+      
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+      
+      if (updateModel != null && updateModel.shouldShowUpdate()) {
+        // Show update dialog
+        if (context.mounted) {
+          await UpdateDialog.show(
+            context,
+            updateModel,
+            onUpdateSkipped: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Update skipped'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
+            onUpdatePostponed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('You will be reminded about this update later'),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+            },
+            onUpdateStarted: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Opening app store...'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          );
+        }
+      } else {
+        // No update available
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You are using the latest version of the app'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (context.mounted) {
+        Navigator.pop(context);
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to check for updates: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
 
   // Get the localized name
   String _getLocalizedName(BuildContext context) {
@@ -228,6 +322,15 @@ class ProfileScreen extends StatelessWidget {
                 iconColor: Colors.green,
                 onTap: () {
                   Navigator.pushNamed(context, AccountStatementScreen.routeName);
+                },
+              ),
+              
+              _buildProfileMenuItem(
+                icon: Icons.system_update,
+                title: 'Check for Updates',
+                iconColor: Colors.orange,
+                onTap: () async {
+                  await _checkForUpdates(context);
                 },
               ),
               

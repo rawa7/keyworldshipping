@@ -11,6 +11,7 @@ import 'models/story_model.dart';
 import 'models/transport_model.dart';
 import 'models/search_response_model.dart';
 import 'models/notification_model.dart';
+import 'models/update_model.dart';
 import 'services/banner_service.dart';
 import 'services/app_service.dart';
 import 'services/auth_service.dart';
@@ -18,6 +19,7 @@ import 'services/info_service.dart';
 import 'services/story_service.dart';
 import 'services/transport_service.dart';
 import 'services/notification_service.dart';
+import 'services/app_update_service.dart';
 import 'screens/tutorials_screen.dart';
 import 'screens/transports_screen.dart';
 import 'screens/list_screen.dart';
@@ -49,6 +51,7 @@ import 'widgets/app_grid_widget.dart';
 import 'widgets/scrolling_text_widget.dart';
 import 'widgets/stories_widget.dart';
 import 'widgets/whatsapp_floating_button.dart';
+import 'widgets/update_dialog.dart';
 import 'package:flutter/services.dart';
 
 class AppController {
@@ -137,6 +140,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthService _authService = AuthService();
+  final AppUpdateService _updateService = AppUpdateService();
   
   @override
   void initState() {
@@ -153,6 +157,11 @@ class _SplashScreenState extends State<SplashScreen> {
     
     if (!mounted) return;
     
+    // Check for app updates first
+    await _checkForUpdates();
+    
+    if (!mounted) return;
+    
     if (isFirstTime) {
       // Show language selection screen for first-time users
       Navigator.pushReplacementNamed(context, '/language-selection');
@@ -162,6 +171,37 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       Navigator.pushReplacementNamed(context, '/auth');
+    }
+  }
+  
+  Future<void> _checkForUpdates() async {
+    try {
+      final updateModel = await _updateService.checkForUpdate();
+      
+      if (updateModel != null && 
+          updateModel.shouldShowUpdate() && 
+          !await _updateService.isVersionSkipped(updateModel.latestVersion)) {
+        
+        if (!mounted) return;
+        
+        // Show update dialog
+        await UpdateDialog.show(
+          context,
+          updateModel,
+          onUpdateSkipped: () {
+            print('✅ User skipped update to version ${updateModel.latestVersion}');
+          },
+          onUpdatePostponed: () {
+            print('⏰ User postponed update to version ${updateModel.latestVersion}');
+          },
+          onUpdateStarted: () {
+            print('🚀 User started update to version ${updateModel.latestVersion}');
+          },
+        );
+      }
+    } catch (e) {
+      print('❌ Error during update check: $e');
+      // Continue with normal app flow even if update check fails
     }
   }
   
@@ -1348,12 +1388,12 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
                 const TransportsScreen(),
                 const TransportsScreen(),
                 ProfileScreen(user: _currentUser),
-              ],
-            ),
-            bottomNavigationBar: _buildBottomNavigation(),
-          ),
-          WhatsAppFloatingButton(user: _currentUser),
-          if (_isSearchOverlayVisible) _buildSearchOverlay(),
+                      ],
+      ),
+      bottomNavigationBar: _buildBottomNavigation(),
+    ),
+    WhatsAppFloatingButton(user: _currentUser),
+    if (_isSearchOverlayVisible) _buildSearchOverlay(),
         ],
       ),
     );

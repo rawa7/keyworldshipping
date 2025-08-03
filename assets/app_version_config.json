@@ -1,0 +1,52 @@
+{
+  "latest_version": "1.0.2",
+  "force_update": false,
+  "is_required": false,
+  "title": "Update Available",
+  "message": "A new version of KeyWorld is available with exciting new features and improvements!",
+  "android_url": "https://play.google.com/store/apps/details?id=com.key.worldship.keyworld",
+  "ios_url": "https://apps.apple.com/app/keyworld/id123456789",
+  "features": [
+    "Improved performance and faster loading times",
+    "Enhanced user interface with better navigation",
+    "New search functionality for better transport tracking",
+    "Bug fixes and stability improvements",
+    "Enhanced security features"
+  ],
+  "release_date": "2024-01-15T10:00:00Z",
+  "release_notes": "This update includes significant performance improvements, a redesigned user interface, and several bug fixes to enhance your experience with KeyWorld shipping services.",
+  "success": true,
+  "minimum_supported_version": "1.0.0",
+  "changelog": {
+    "1.0.2": [
+      "Fixed crash when searching for transport codes",
+      "Improved notification system",
+      "Added support for multiple languages",
+      "Enhanced security protocols"
+    ],
+    "1.0.1": [
+      "Initial bug fixes",
+      "Performance optimizations",
+      "UI improvements"
+    ]
+  },
+  "server_maintenance": {
+    "is_maintenance": false,
+    "maintenance_message": "We are currently performing maintenance. Please try again later.",
+    "maintenance_start": "2024-01-20T02:00:00Z",
+    "maintenance_end": "2024-01-20T04:00:00Z"
+  },
+  "supported_platforms": {
+    "android": {
+      "min_version": "6.0",
+      "min_api_level": 23,
+      "supported": true
+    },
+    "ios": {
+      "min_version": "12.0",
+      "supported": true
+    }
+  },
+  "api_version": "1.0",
+  "timestamp": "2024-01-15T10:00:00Z"
+}
