@@ -56,7 +56,7 @@ class TutorialModel {
     return TutorialModel(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      videoUrl: json['video_url']?.toString() ?? '',
+      videoUrl: (json['vedio_url'] ?? json['video_url'])?.toString() ?? '',
       note: json['note']?.toString() ?? '',
       coverimg: json['coverimg']?.toString() ?? '',
       image: json['image']?.toString() ?? '',

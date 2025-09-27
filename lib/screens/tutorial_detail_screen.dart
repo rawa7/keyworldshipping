@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 import '../models/tutorial_model.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -19,24 +20,19 @@ class TutorialDetailScreen extends StatefulWidget {
 }
 
 class _TutorialDetailScreenState extends State<TutorialDetailScreen> {
-  late YoutubePlayerController _controller;
-  bool _isInitialized = false;
-  bool _isPlayerReady = false;
   final AuthService _authService = AuthService();
   UserModel? _currentUser;
+  VideoPlayerController? _videoController;
+  ChewieController? _chewieController;
+  bool _isVideoInitialized = false;
+  bool _isLoading = false;
+  String? _videoError;
 
   @override
   void initState() {
     super.initState();
-    // Allow all orientations for YouTube's native fullscreen
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    _initializePlayer();
     _loadUserData();
+    _initializeVideoPlayer();
   }
 
   Future<void> _loadUserData() async {
@@ -77,38 +73,125 @@ class _TutorialDetailScreenState extends State<TutorialDetailScreen> {
     );
   }
 
-  void _initializePlayer() {
-    final videoId = widget.tutorial.getYoutubeVideoId();
-    if (videoId.isNotEmpty) {
-      _controller = YoutubePlayerController.fromVideoId(
-        videoId: videoId,
-        autoPlay: false,
-        params: const YoutubePlayerParams(
-          showControls: true,
-          showFullscreenButton: true, // Let YouTube handle fullscreen
-          enableCaption: true,
-          captionLanguage: 'en',
-          showVideoAnnotations: false,
-          enableJavaScript: true,
-          strictRelatedVideos: true,
-        ),
-      );
-      
-      // Listen to player state changes
-      _controller.listen((event) {
-        if (mounted) {
-          setState(() {
-            _isPlayerReady = event.playerState == PlayerState.playing || 
-                           event.playerState == PlayerState.paused ||
-                           event.playerState == PlayerState.ended;
-          });
-        }
-      });
+  bool _isValidVideoUrl(String url) {
+    // Check if the URL is actually pointing to a video file
+    final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v', '.3gp'];
+    final lowerUrl = url.toLowerCase();
+    
+    // Check for common image extensions that should not be treated as videos
+    final imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
+    for (final ext in imageExtensions) {
+      if (lowerUrl.endsWith(ext)) {
+        return false;
+      }
+    }
+    
+    // Check for video extensions or YouTube/streaming URLs
+    return videoExtensions.any((ext) => lowerUrl.contains(ext)) || 
+           lowerUrl.contains('youtube') || 
+           lowerUrl.contains('youtu.be') || 
+           lowerUrl.contains('vimeo') ||
+           (!imageExtensions.any((ext) => lowerUrl.contains(ext)));
+  }
+
+  Future<void> _initializeVideoPlayer() async {
+    try {
+      final videoUrl = widget.tutorial.videoUrl;
+      if (videoUrl.isEmpty) {
+        setState(() {
+          _videoError = 'Video URL not available';
+        });
+        return;
+      }
+
+      // Validate if URL is actually a video
+      if (!_isValidVideoUrl(videoUrl)) {
+        setState(() {
+          _videoError = 'URL points to an image file, not a video. Please contact support to fix this tutorial.';
+        });
+        return;
+      }
+
+      print('🎥 Initializing Chewie Player for URL: $videoUrl');
       
       setState(() {
-        _isInitialized = true;
+        _isLoading = true;
       });
+      
+      // Create video player controller
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(videoUrl),
+        httpHeaders: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      );
+      
+      // Initialize video player
+      await _videoController!.initialize();
+      
+      // Create Chewie controller with custom configuration
+      _chewieController = ChewieController(
+        videoPlayerController: _videoController!,
+        autoPlay: false,
+        looping: false,
+        aspectRatio: _videoController!.value.aspectRatio,
+        allowFullScreen: true,
+        allowMuting: true,
+        allowPlaybackSpeedChanging: false,
+        showControls: true,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: Colors.red,
+          handleColor: Colors.red,
+          backgroundColor: Colors.white24,
+          bufferedColor: Colors.white60,
+        ),
+        placeholder: Container(
+          color: Colors.black,
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+        autoInitialize: true,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+          _videoError = null;
+          _isLoading = false;
+        });
+      }
+      
+    } catch (e) {
+      print('❌ Error initializing Chewie Player: $e');
+      if (mounted) {
+        setState(() {
+          _videoError = 'Failed to load video: ${e.toString()}';
+          _isVideoInitialized = false;
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Video Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
 
@@ -117,23 +200,8 @@ class _TutorialDetailScreenState extends State<TutorialDetailScreen> {
 
   @override
   void dispose() {
-    // Reset orientation and UI settings
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
-    
-    // Close the player controller properly
-    if (_isInitialized) {
-      _controller.close();
-    }
+    _chewieController?.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
   @override
@@ -239,42 +307,117 @@ class _TutorialDetailScreenState extends State<TutorialDetailScreen> {
   }
 
   Widget _buildVideoPlayer() {
-    if (!_isInitialized) {
-      return Container(
-        height: 220,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
+    if (_videoError != null) {
+      return _buildErrorState();
+    }
+    
+    if (_chewieController == null || !_isVideoInitialized) {
+      return _buildLoadingState();
+    }
+
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Chewie(
+          controller: _chewieController!,
         ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline, 
-                color: Colors.white, 
-                size: 48,
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading video...',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
-              SizedBox(height: 8),
-              Text(
-                'Video Not Available',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildErrorState() {
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 48,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Video Not Available',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (_videoError != null) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  _videoError!,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
-          ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _videoError = null;
+                  _isVideoInitialized = false;
+                });
+                _initializeVideoPlayer();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: YoutubePlayer(
-        controller: _controller,
-        aspectRatio: 16 / 9,
       ),
     );
   }
