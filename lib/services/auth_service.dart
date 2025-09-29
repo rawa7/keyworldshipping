@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import 'username_generation_service.dart';
 
 class AuthService {
   final String baseUrl = 'https://keyworldcargo.com/api';
+  final UsernameGenerationService _usernameService = UsernameGenerationService();
   
   // Check if a user exists by username or phone
   Future<UserModel?> searchUser(String data) async {
@@ -126,10 +128,18 @@ class AuthService {
         'city': city,
       };
       
-      // Add username only if provided
+      // Generate automatic username if none provided
+      String finalUsername;
       if (username != null && username.isNotEmpty) {
-        requestBody['username'] = username;
+        finalUsername = username;
+      } else {
+        print('🎯 No username provided, generating automatic username...');
+        finalUsername = await _usernameService.generateNextUsername(name);
+        print('🎯 Generated automatic username: $finalUsername');
       }
+      
+      // Always add username to request body
+      requestBody['username'] = finalUsername;
       
       final url = '$baseUrl/create_user.php';
       print('🚀 Registration request URL: $url');

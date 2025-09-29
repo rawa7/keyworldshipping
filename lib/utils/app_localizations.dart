@@ -62,6 +62,12 @@ class AppLocalizations {
       
       // Loading and Error Messages
       'loadingTransportationFees': 'Loading transportation fees...',
+      'loadingNotTransferItems': 'Loading not transfer items...',
+      'notTransferItems': 'NOT TRANSFER ITEMS',
+      'itemType': 'Item Type',
+      'itemExample': 'Item Example',
+      'shop': 'SHOP',
+      'loadingShopItems': 'Loading shop items...',
       'loadingAddresses': 'Loading addresses...',
       'loadingUncodedGoods': 'Loading uncoded goods...',
       'loadingChineseCompanies': 'Loading Chinese companies...',
@@ -287,7 +293,10 @@ class AppLocalizations {
       'enterUsername': 'Enter username (must start with H.E)',
       'usernameRequired': 'Please enter username',
       'usernameFormat': 'Username must start with H.E',
+      'usernameFormatWithName': 'Automatic username format: H.E.S:CW550/YourName',
       'accountCreated': 'Account created successfully!',
+      'yourUsername': 'Your username',
+      'automaticUsernameGenerated': 'An automatic username has been generated for you',
       'userExists': 'A user with this phone number already exists. Please try logging in instead.',
       'alreadyHaveAccount': 'Already have an account? Login',
     },
@@ -337,6 +346,12 @@ class AppLocalizations {
       
       // Loading and Error Messages
       'loadingTransportationFees': 'جاري تحميل رسوم النقل...',
+      'loadingNotTransferItems': 'جاري تحميل العناصر غير القابلة للنقل...',
+      'notTransferItems': 'العناصر غير القابلة للنقل',
+      'itemType': 'نوع العنصر',
+      'itemExample': 'مثال على العنصر',
+      'shop': 'المتجر',
+      'loadingShopItems': 'جاري تحميل عناصر المتجر...',
       'loadingAddresses': 'جاري تحميل العنوان...',
       'loadingUncodedGoods': 'جاري تحميل البضائع غير المعبرة...',
       'loadingChineseCompanies': 'جاري تحميل الشركات الصينية...',
@@ -571,7 +586,10 @@ class AppLocalizations {
       'enterUsername': 'أدخل اسم المستخدم (يجب أن يبدأ بـ H.E)',
       'usernameRequired': 'الرجاء إدخال اسم المستخدم',
       'usernameFormat': 'يجب أن يبدأ اسم المستخدم بـ H.E',
+      'usernameFormatWithName': 'تنسيق اسم المستخدم التلقائي: H.E.S:CW550/اسمك',
       'accountCreated': 'تم إنشاء الحساب بنجاح!',
+      'yourUsername': 'اسم المستخدم الخاص بك',
+      'automaticUsernameGenerated': 'تم إنشاء اسم مستخدم تلقائي لك',
       'userExists': 'يوجد مستخدم بهذا الرقم. الرجاء تسجيل الدخول بدلاً من ذلك.',
       'alreadyHaveAccount': 'لديك حساب بالفعل؟ تسجيل الدخول',
     },
@@ -621,6 +639,12 @@ class AppLocalizations {
 
       // Loading and Error Messages
       'loadingTransportationFees': 'لەبارکردنی خەرجی گواستنەوە...',
+      'loadingNotTransferItems': 'لەبارکردنی شتەکانی ناگواستراو...',
+      'notTransferItems': 'شتەکانی ناگواستراو',
+      'itemType': 'جۆری شت',
+      'itemExample': 'نموونەی شت',
+      'shop': 'دوکان',
+      'loadingShopItems': 'لەبارکردنی شتەکانی دوکان...',
       'loadingAddresses': 'لەبارکردنی ناونیشانەکان...',
       'loadingUncodedGoods': 'لەبارکردنی کاڵاکانی نەکۆدکراو...',
       'loadingChineseCompanies': 'لەبارکردنی کۆمپانیاکانی چین...',
@@ -855,7 +879,10 @@ class AppLocalizations {
       'enterUsername': 'ناوی بەکارهێنەر بنووسە (دەبێت بە H.E دەست پێ بکات)',
       'usernameRequired': 'تکایە ناوی بەکارهێنەر بنووسە',
       'usernameFormat': 'ناوی بەکارهێنەر دەبێت بە H.E دەست پێ بکات',
+      'usernameFormatWithName': 'فۆرماتی ناوی بەکارهێنەری ئۆتۆماتیک: H.E.S:CW550/ناوت',
       'accountCreated': 'هەژمار بە سەرکەوتوویی دروستکرا!',
+      'yourUsername': 'ناوی بەکارهێنەرت',
+      'automaticUsernameGenerated': 'ناوی بەکارهێنەرێکی ئۆتۆماتیک دروستکرا بۆت',
       'userExists': 'بەکارهێنەرێک بەو ژمارەیە هەیە. تکایە چوونەژوورەوە بکە.',
       'alreadyHaveAccount': 'پێشتر هەژمارت هەیە؟ چوونەژوورەوە',
     },
@@ -906,6 +933,12 @@ class AppLocalizations {
   
   // Loading and Error Messages
   String get loadingTransportationFees => _localizedValues[locale.languageCode]?['loadingTransportationFees'] ?? _localizedValues['en']!['loadingTransportationFees']!;
+  String get loadingNotTransferItems => _localizedValues[locale.languageCode]?['loadingNotTransferItems'] ?? _localizedValues['en']!['loadingNotTransferItems']!;
+  String get notTransferItems => _localizedValues[locale.languageCode]?['notTransferItems'] ?? _localizedValues['en']!['notTransferItems']!;
+  String get itemType => _localizedValues[locale.languageCode]?['itemType'] ?? _localizedValues['en']!['itemType']!;
+  String get itemExample => _localizedValues[locale.languageCode]?['itemExample'] ?? _localizedValues['en']!['itemExample']!;
+  String get shop => _localizedValues[locale.languageCode]?['shop'] ?? _localizedValues['en']!['shop']!;
+  String get loadingShopItems => _localizedValues[locale.languageCode]?['loadingShopItems'] ?? _localizedValues['en']!['loadingShopItems']!;
   String get loadingAddresses => _localizedValues[locale.languageCode]?['loadingAddresses'] ?? _localizedValues['en']!['loadingAddresses']!;
   String get loadingUncodedGoods => _localizedValues[locale.languageCode]?['loadingUncodedGoods'] ?? _localizedValues['en']!['loadingUncodedGoods']!;
   String get loadingChineseCompanies => _localizedValues[locale.languageCode]?['loadingChineseCompanies'] ?? _localizedValues['en']!['loadingChineseCompanies']!;
@@ -1141,6 +1174,9 @@ class AppLocalizations {
   String get usernameRequired => _localizedValues[locale.languageCode]!['usernameRequired']!;
   String get usernameFormat => _localizedValues[locale.languageCode]!['usernameFormat']!;
   String get accountCreated => _localizedValues[locale.languageCode]!['accountCreated']!;
+  String get yourUsername => _localizedValues[locale.languageCode]!['yourUsername']!;
+  String get automaticUsernameGenerated => _localizedValues[locale.languageCode]!['automaticUsernameGenerated']!;
+  String get usernameFormatWithName => _localizedValues[locale.languageCode]!['usernameFormatWithName']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

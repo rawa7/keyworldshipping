@@ -102,12 +102,18 @@ class _AuthScreenState extends State<AuthScreen> {
         if (!mounted) return;
         
         final localizations = AppLocalizations.of(context);
-        // Show success message
+        
+        // Show success message with generated username if applicable
+        String successMessage = localizations.accountCreated;
+        if (!_hasUsername && user.username != null) {
+          successMessage = '${localizations.accountCreated}\n${localizations.yourUsername}: ${user.username}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.accountCreated),
+            content: Text(successMessage),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 4),
           ),
         );
         
@@ -329,6 +335,45 @@ class _AuthScreenState extends State<AuthScreen> {
                                 }
                                 return null;
                               },
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.blue.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.blue.shade600, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          localizations.automaticUsernameGenerated,
+                                          style: TextStyle(
+                                            color: Colors.blue.shade700,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          localizations.usernameFormatWithName,
+                                          style: TextStyle(
+                                            color: Colors.blue.shade600,
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ],

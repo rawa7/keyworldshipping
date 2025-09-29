@@ -31,6 +31,8 @@ import 'screens/account_statement_screen.dart';
 import 'screens/story_viewer_screen.dart';
 import 'screens/uncoded_goods_screen.dart';
 import 'screens/chinese_companies_screen.dart';
+import 'screens/not_transfer_items_screen.dart';
+import 'screens/shop_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/about_us_screen.dart';
 import 'screens/contact_us_screen.dart';
@@ -123,6 +125,8 @@ class MyApp extends StatelessWidget {
         '/addresses2': (context) => const Addresses2Screen(),
         '/uncoded-goods': (context) => const UncodedGoodsScreen(),
         '/chinese-companies': (context) => const ChineseCompaniesScreen(),
+        '/not-transfer-items': (context) => const NotTransferItemsScreen(),
+        '/shop': (context) => const ShopScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         AccountStatementScreen.routeName: (context) => AccountStatementScreen(),
       },
@@ -574,8 +578,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
   }
 
   void _updateCountriesFromApps() {
-    // Extract unique countries from apps
-    Set<String> uniqueCountries = {};
+    // Extract countries in the order they appear in the API response
+    List<String> countriesInApiOrder = [];
+    Set<String> seenCountries = {};
     
     for (var app in _apps) {
       if (app.country.isNotEmpty) {
@@ -584,21 +589,18 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
         if (country == 'US' || country == 'UNITED STATES') {
           country = 'USA';
         }
-        uniqueCountries.add(country);
+        
+        // Add country to list only if we haven't seen it before
+        // This preserves the API order (first occurrence determines position)
+        if (!seenCountries.contains(country)) {
+          countriesInApiOrder.add(country);
+          seenCountries.add(country);
+        }
       }
     }
     
-    // Convert to list and sort with China first, then others alphabetically
-    List<String> sortedCountries = uniqueCountries.toList();
-    sortedCountries.sort();
-    
-    // Ensure China comes first if it exists
-    if (sortedCountries.contains('CHINA')) {
-      sortedCountries.remove('CHINA');
-      sortedCountries.insert(0, 'CHINA');
-    }
-    
-    _countries = sortedCountries;
+    // The countries are now in the exact order they appear in the API response
+    _countries = countriesInApiOrder;
   }
 
   Future<void> _fetchInfo() async {

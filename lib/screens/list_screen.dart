@@ -148,6 +148,18 @@ class _ListScreenState extends State<ListScreen> {
                   Navigator.pushNamed(context, '/chinese-companies');
                 },
               ),
+              _buildListItem(
+                title: localizations.notTransferItems,
+                onTap: () {
+                  Navigator.pushNamed(context, '/not-transfer-items');
+                },
+              ),
+              _buildListItem(
+                title: localizations.shop,
+                onTap: () {
+                  Navigator.pushNamed(context, '/shop');
+                },
+              ),
             ],
           ),
         ),
