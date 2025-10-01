@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/app_update_service.dart';
 import '../models/user_model.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_localizations.dart';
 import '../widgets/whatsapp_floating_button.dart';
+import '../widgets/update_dialog.dart';
 import 'auth_screen.dart';
 
 class PreAuthScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
+  final AppUpdateService _updateService = AppUpdateService();
   
   bool _isLoading = false;
   String? _errorMessage;
@@ -24,6 +27,65 @@ class _PreAuthScreenState extends State<PreAuthScreen> {
   // HIDE GUEST LOGIN: Set to false to keep guest login button hidden
   // Can be changed to true if guest login needs to be re-enabled later
   static const bool _showGuestLogin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for app updates after the screen is fully loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+  
+  Future<void> _checkForUpdates() async {
+    // Delay to allow screen to settle
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    try {
+      print('🔍 Checking for updates...');
+      final currentVersion = await _updateService.getCurrentVersion();
+      print('📱 Current app version: $currentVersion');
+      
+      // Force check to bypass 24-hour rate limiting for testing
+      final updateModel = await _updateService.checkForUpdate(forceCheck: true);
+      
+      if (updateModel != null) {
+        print('📦 Update check result: ${updateModel.toString()}');
+        print('🎯 Should show update: ${updateModel.shouldShowUpdate()}');
+        
+        final isSkipped = await _updateService.isVersionSkipped(updateModel.latestVersion);
+        print('⏭️ Is version skipped: $isSkipped');
+        
+        if (updateModel.shouldShowUpdate() && !isSkipped) {
+          if (!mounted) return;
+          
+          print('✅ Showing update dialog for version ${updateModel.latestVersion}');
+          
+          // Show update dialog
+          await UpdateDialog.show(
+            context,
+            updateModel,
+            onUpdateSkipped: () {
+              print('✅ User skipped update to version ${updateModel.latestVersion}');
+            },
+            onUpdatePostponed: () {
+              print('⏰ User postponed update to version ${updateModel.latestVersion}');
+            },
+            onUpdateStarted: () {
+              print('🚀 User started update to version ${updateModel.latestVersion}');
+            },
+          );
+        } else {
+          print('❌ Not showing update dialog');
+        }
+      } else {
+        print('ℹ️ No update available or check was rate-limited');
+      }
+    } catch (e) {
+      print('❌ Error during update check: $e');
+      // Continue with normal app flow even if update check fails
+    }
+  }
 
   @override
   void dispose() {

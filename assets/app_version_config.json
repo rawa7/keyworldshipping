@@ -1,5 +1,5 @@
 {
-  "latest_version": "1.0.2",
+  "latest_version": "1.3.0",
   "force_update": false,
   "is_required": false,
   "title": "Update Available",
@@ -7,17 +7,29 @@
   "android_url": "https://play.google.com/store/apps/details?id=com.key.worldship.keyworld",
   "ios_url": "https://apps.apple.com/app/keyworld/id123456789",
   "features": [
-    "Improved performance and faster loading times",
-    "Enhanced user interface with better navigation",
-    "New search functionality for better transport tracking",
+    "Improved app performance",
+    "Enhanced security features",
+    "Better user interface",
     "Bug fixes and stability improvements",
-    "Enhanced security features"
+    "New notification system"
   ],
   "release_date": "2024-01-15T10:00:00Z",
   "release_notes": "This update includes significant performance improvements, a redesigned user interface, and several bug fixes to enhance your experience with KeyWorld shipping services.",
   "success": true,
   "minimum_supported_version": "1.0.0",
   "changelog": {
+    "1.3.0": [
+      "Improved app performance",
+      "Enhanced security features",
+      "Better user interface",
+      "Bug fixes and stability improvements",
+      "New notification system"
+    ],
+    "1.2.2": [
+      "Fixed update dialog blocking issue",
+      "Improved navigation flow",
+      "Bug fixes"
+    ],
     "1.0.2": [
       "Fixed crash when searching for transport codes",
       "Improved notification system",

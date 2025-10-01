@@ -161,11 +161,7 @@ class _SplashScreenState extends State<SplashScreen> {
     
     if (!mounted) return;
     
-    // Check for app updates first
-    await _checkForUpdates();
-    
-    if (!mounted) return;
-    
+    // Navigate to appropriate screen (update check will happen on destination screen)
     if (isFirstTime) {
       // Show language selection screen for first-time users
       Navigator.pushReplacementNamed(context, '/language-selection');
@@ -175,37 +171,6 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       Navigator.pushReplacementNamed(context, '/auth');
-    }
-  }
-  
-  Future<void> _checkForUpdates() async {
-    try {
-      final updateModel = await _updateService.checkForUpdate();
-      
-      if (updateModel != null && 
-          updateModel.shouldShowUpdate() && 
-          !await _updateService.isVersionSkipped(updateModel.latestVersion)) {
-        
-        if (!mounted) return;
-        
-        // Show update dialog
-        await UpdateDialog.show(
-          context,
-          updateModel,
-          onUpdateSkipped: () {
-            print('✅ User skipped update to version ${updateModel.latestVersion}');
-          },
-          onUpdatePostponed: () {
-            print('⏰ User postponed update to version ${updateModel.latestVersion}');
-          },
-          onUpdateStarted: () {
-            print('🚀 User started update to version ${updateModel.latestVersion}');
-          },
-        );
-      }
-    } catch (e) {
-      print('❌ Error during update check: $e');
-      // Continue with normal app flow even if update check fails
     }
   }
   
@@ -288,6 +253,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
   final StoryService _storyService = StoryService();
   final TransportService _transportService = TransportService();
   final NotificationService _notificationService = NotificationService();
+  final AppUpdateService _updateService = AppUpdateService();
   List<BannerModel> _banners = [];
   List<AppModel> _apps = [];
   List<InfoModel> _infoItems = [];
@@ -341,7 +307,59 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
       _fetchStories();
       _fetchTransports();
       _fetchNotifications();
+      // Check for app updates after the screen is fully loaded
+      _checkForUpdates();
     });
+  }
+  
+  Future<void> _checkForUpdates() async {
+    // Delay to allow screen to settle
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    try {
+      print('🔍 Checking for updates...');
+      final currentVersion = await _updateService.getCurrentVersion();
+      print('📱 Current app version: $currentVersion');
+      
+      // Force check to bypass 24-hour rate limiting for testing
+      final updateModel = await _updateService.checkForUpdate(forceCheck: true);
+      
+      if (updateModel != null) {
+        print('📦 Update check result: ${updateModel.toString()}');
+        print('🎯 Should show update: ${updateModel.shouldShowUpdate()}');
+        
+        final isSkipped = await _updateService.isVersionSkipped(updateModel.latestVersion);
+        print('⏭️ Is version skipped: $isSkipped');
+        
+        if (updateModel.shouldShowUpdate() && !isSkipped) {
+          if (!mounted) return;
+          
+          print('✅ Showing update dialog for version ${updateModel.latestVersion}');
+          
+          // Show update dialog
+          await UpdateDialog.show(
+            context,
+            updateModel,
+            onUpdateSkipped: () {
+              print('✅ User skipped update to version ${updateModel.latestVersion}');
+            },
+            onUpdatePostponed: () {
+              print('⏰ User postponed update to version ${updateModel.latestVersion}');
+            },
+            onUpdateStarted: () {
+              print('🚀 User started update to version ${updateModel.latestVersion}');
+            },
+          );
+        } else {
+          print('❌ Not showing update dialog');
+        }
+      } else {
+        print('ℹ️ No update available or check was rate-limited');
+      }
+    } catch (e) {
+      print('❌ Error during update check: $e');
+      // Continue with normal app flow even if update check fails
+    }
   }
 
   @override
