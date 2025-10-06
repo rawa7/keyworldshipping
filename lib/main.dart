@@ -103,6 +103,9 @@ class MyApp extends StatelessWidget {
       // Configure localization delegates
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        // Force English selection toolbar labels for 'fa' (must come BEFORE globals)
+        EnglishForFaMaterialLocalizationsDelegate(),
+        EnglishForFaCupertinoLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

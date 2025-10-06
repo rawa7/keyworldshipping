@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart';
 
 class AppLocalizations {
@@ -346,11 +348,11 @@ class AppLocalizations {
       
       // Loading and Error Messages
       'loadingTransportationFees': 'جاري تحميل رسوم النقل...',
-      'loadingNotTransferItems': 'جاري تحميل العناصر غير القابلة للنقل...',
-      'notTransferItems': 'العناصر غير القابلة للنقل',
+      'loadingNotTransferItems': 'العناصر التي ماتنشحن عندنا',
+      'notTransferItems': 'العناصر التي ماتنشحن عندنا',
       'itemType': 'نوع العنصر',
       'itemExample': 'مثال على العنصر',
-      'shop': 'المتجر',
+      'shop': 'البضاعة للبيع',
       'loadingShopItems': 'جاري تحميل عناصر المتجر...',
       'loadingAddresses': 'جاري تحميل العنوان...',
       'loadingUncodedGoods': 'جاري تحميل البضائع غير المعبرة...',
@@ -373,7 +375,7 @@ class AppLocalizations {
       'account': 'الحساب',
       'accountName': 'اسم الحساب',
       'username': 'اسم المستخدم',
-      'phoneNumber': 'رقم الهاتف',
+      'phoneNumber': ' رقم الهاتف بیها واتسئاب',
       'accountType': 'نوع الحساب',
       'standard': 'قياسي',
       'accountInfo': 'معلومات الحساب',
@@ -566,8 +568,8 @@ class AppLocalizations {
       'register': 'تسجيل',
       'continueAsGuest': 'المتابعة كضيف',
       'notRegistered': 'أنت غير مسجل',
-      'phoneNumber': 'رقم الهاتف',
-      'enterPhoneNumber': 'أدخل رقم هاتفك',
+      'phoneNumber': ' رقم الهاتف بیها واتسئاب',
+      'enterPhoneNumber': ' أدخل رقم هاتفك بیها واتسئاب',
       'invalidPhone': 'الرجاء إدخال رقم هاتف صحيح',
       
       // Registration Screen
@@ -639,11 +641,11 @@ class AppLocalizations {
 
       // Loading and Error Messages
       'loadingTransportationFees': 'لەبارکردنی خەرجی گواستنەوە...',
-      'loadingNotTransferItems': 'لەبارکردنی شتەکانی ناگواستراو...',
-      'notTransferItems': 'شتەکانی ناگواستراو',
+      'loadingNotTransferItems': 'ئەو كاڵایانەی كە نایان گوازینەوە',
+      'notTransferItems': 'ئەو كاڵایانەی كە نایان گوازینەوە',
       'itemType': 'جۆری شت',
       'itemExample': 'نموونەی شت',
-      'shop': 'دوکان',
+      'shop': 'كاڵا بۆ فڕۆشتن',
       'loadingShopItems': 'لەبارکردنی شتەکانی دوکان...',
       'loadingAddresses': 'لەبارکردنی ناونیشانەکان...',
       'loadingUncodedGoods': 'لەبارکردنی کاڵاکانی نەکۆدکراو...',
@@ -860,7 +862,7 @@ class AppLocalizations {
       'continueAsGuest': 'وەک میوان بەردەوام ببه',
       'notRegistered': 'تۆمار نەکراویت',
       'phoneNumber': 'ژمارەی تەلەفون',
-      'enterPhoneNumber': 'ژمارەی تەلەفونت بنووسە',
+      'enterPhoneNumber': 'ژمارەی تەلەفون كە واتسئاپ ی لەسەر بێت',
       'invalidPhone': 'تکایە ژمارەیەکی دروست بنووسە',
 
       // Registration Screen
@@ -1195,3 +1197,35 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 } 
+
+// Force English Material localization when locale is 'fa' (e.g., copy/paste menu)
+class EnglishForFaMaterialLocalizationsDelegate extends LocalizationsDelegate<MaterialLocalizations> {
+  const EnglishForFaMaterialLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'fa';
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) {
+    return DefaultMaterialLocalizations.load(const Locale('en', ''));
+  }
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<MaterialLocalizations> old) => false;
+}
+
+// Force English Cupertino localization when locale is 'fa' (iOS selection toolbar)
+class EnglishForFaCupertinoLocalizationsDelegate extends LocalizationsDelegate<CupertinoLocalizations> {
+  const EnglishForFaCupertinoLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'fa';
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) {
+    return DefaultCupertinoLocalizations.load(const Locale('en', ''));
+  }
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<CupertinoLocalizations> old) => false;
+}
