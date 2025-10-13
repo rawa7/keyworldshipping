@@ -117,9 +117,16 @@ class AppUpdateService {
     }
   }
 
-  /// Mark a specific version as skipped by the user
+  /// Mark a specific version as skipped by the user (only for non-force updates)
   Future<void> skipVersion(String version) async {
     try {
+      // First check if this version requires force update
+      final updateModel = await checkForUpdate(forceCheck: true);
+      if (updateModel != null && updateModel.isUpdateRequired && updateModel.latestVersion == version) {
+        print('⚠️ Cannot skip version $version - it is a required update');
+        return; // Don't allow skipping force updates
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('$_skipVersionKey$version', true);
     } catch (e) {
@@ -127,9 +134,15 @@ class AppUpdateService {
     }
   }
 
-  /// Check if a specific version has been skipped by the user
+  /// Check if a specific version has been skipped by the user (force updates can never be skipped)
   Future<bool> isVersionSkipped(String version) async {
     try {
+      // First check if this version requires force update
+      final updateModel = await checkForUpdate(forceCheck: true);
+      if (updateModel != null && updateModel.isUpdateRequired && updateModel.latestVersion == version) {
+        return false; // Force updates can never be considered "skipped"
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool('$_skipVersionKey$version') ?? false;
     } catch (e) {

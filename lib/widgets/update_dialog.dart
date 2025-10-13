@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,12 +32,16 @@ class UpdateDialog extends StatefulWidget {
     return showDialog<void>(
       context: context,
       barrierDismissible: !updateModel.isUpdateRequired,
+      // Prevent back button from dismissing force updates
       builder: (BuildContext context) {
-        return UpdateDialog(
-          updateModel: updateModel,
-          onUpdateSkipped: onUpdateSkipped,
-          onUpdatePostponed: onUpdatePostponed,
-          onUpdateStarted: onUpdateStarted,
+        return PopScope(
+          canPop: !updateModel.isUpdateRequired,
+          child: UpdateDialog(
+            updateModel: updateModel,
+            onUpdateSkipped: onUpdateSkipped,
+            onUpdatePostponed: onUpdatePostponed,
+            onUpdateStarted: onUpdateStarted,
+          ),
         );
       },
     );
@@ -51,6 +56,7 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   bool _isUpdating = false;
+  Timer? _lifecycleTimer;
 
   @override
   void initState() {
@@ -82,6 +88,7 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
   @override
   void dispose() {
     _animationController.dispose();
+    _lifecycleTimer?.cancel();
     super.dispose();
   }
 
@@ -105,9 +112,13 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
           
           widget.onUpdateStarted?.call();
           
-          // Close dialog after successful launch
-          if (mounted) {
+          // For force updates, don't close the dialog - keep it open
+          // For optional updates, close after successful launch
+          if (mounted && !widget.updateModel.isUpdateRequired) {
             Navigator.of(context).pop();
+          } else if (widget.updateModel.isUpdateRequired) {
+            // For force updates, start monitoring app lifecycle
+            _startAppLifecycleMonitoring();
           }
         } else {
           _showErrorSnackBar('Could not open app store');
@@ -124,6 +135,35 @@ class _UpdateDialogState extends State<UpdateDialog> with SingleTickerProviderSt
         });
       }
     }
+  }
+
+  void _startAppLifecycleMonitoring() {
+    // Cancel any existing timer
+    _lifecycleTimer?.cancel();
+    
+    // Start a timer to periodically check if user returned and re-verify app version
+    _lifecycleTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      try {
+        final appUpdateService = AppUpdateService();
+        final updateModel = await appUpdateService.checkForUpdate(forceCheck: true);
+        
+        // If no update needed anymore (user updated), close dialog
+        if (updateModel == null || !updateModel.shouldShowUpdate()) {
+          timer.cancel();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      } catch (e) {
+        // Continue monitoring even if check fails
+        print('📱 Lifecycle monitoring check failed: $e');
+      }
+    });
   }
 
   Future<void> _handleSkip() async {

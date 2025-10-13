@@ -386,6 +386,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
     switch (state) {
       case AppLifecycleState.resumed:
         // App is in the foreground
+        // Check for force updates when user returns (e.g., from app store)
+        _checkForForceUpdatesOnResume();
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -396,6 +398,35 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin,
         break;
       case AppLifecycleState.hidden:
         break;
+    }
+  }
+
+  Future<void> _checkForForceUpdatesOnResume() async {
+    // Small delay to let the app settle
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    try {
+      print('📱 App resumed - checking for force updates...');
+      final updateModel = await _updateService.checkForUpdate(forceCheck: true);
+      
+      if (updateModel != null && updateModel.isUpdateRequired && updateModel.shouldShowUpdate()) {
+        print('⚠️ Force update still required: ${updateModel.latestVersion}');
+        
+        if (!mounted) return;
+        
+        // Show force update dialog immediately
+        await UpdateDialog.show(
+          context,
+          updateModel,
+          onUpdateStarted: () {
+            print('🚀 Force update started from app resume');
+          },
+        );
+      } else {
+        print('✅ No force update required on resume');
+      }
+    } catch (e) {
+      print('❌ Error checking force updates on resume: $e');
     }
   }
 
